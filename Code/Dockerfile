@@ -22,4 +22,4 @@ USER myuser
 EXPOSE 5000
 
 # Command to run the application
-CMD ["python3", "sts.py"]
+CMD ["python3", "simple_time_service.py"]
