@@ -24,18 +24,18 @@ You can directly run the pre-built Docker image from Docker Hub or start with bu
 
 Bash
 
-docker run -p 5000:5000 arun1771/my-sts-app:v2
+_docker run -p 5000:5000 arun1771/my-sts-app:v2_
 
 Once the container is running, you can access the service by opening your web browser or using a tool like curl to the following address:
 
-http://localhost:5000/
+_http://localhost:5000/_
 You should see a JSON response similar to:
 
 JSON
 
-{
+_{
   "timestamp": "2025-04-04T23:06:00.123456",
   "ip": "172.17.0.1"
-}
+}_
 (The IP address might vary depending on your Docker network configuration).
 
