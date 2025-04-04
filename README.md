@@ -9,11 +9,9 @@ When accessed, the application returns a JSON response with the following inform
 * **timestamp:** The current date and time on the server.
 * **ip:** The IP address of the client making the request.
 
-## Code
+## Running the Application in Docker
 
 The Python code for this service is located in the "Code" directory of this repository.
-
-**Running the Application in Docker**
 
 This application has been containerized and is available on Docker Hub. You can easily run it using Docker.
 
