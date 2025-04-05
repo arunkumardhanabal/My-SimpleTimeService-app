@@ -1,4 +1,4 @@
-# Simple Time Service
+# Task 1 - Simple Time Service
 
 This repository contains a simple Python Flask application that provides the current timestamp and the IP address of the visitor.
 
@@ -44,3 +44,78 @@ JSON
 }
 ```
 
+# Task 2 - Terraform and Cloud
+
+# Terraform EKS Cluster with Load Balancer
+
+"Terraform-Files" directory contains Terraform code to provision the following infrastructure in AWS:
+
+* A Virtual Private Cloud (VPC) with:
+    * 2 Public Subnets
+    * 2 Private Subnets
+* An Amazon Elastic Kubernetes Service (EKS) cluster deployed within the VPC.
+* An EKS Node Group with worker nodes deployed exclusively in the **private** subnets.
+* A Kubernetes Deployment running the `arun1771/my-sts-app:v2` container with 4 replicas.
+* A Load Balancer (Network Load Balancer by default) deployed in the **public** subnets to expose the Kubernetes service.
+
+## Prerequisites
+
+* [Terraform](https://www.terraform.io/downloads.html) installed on your local machine.
+* [AWS CLI](https://aws.amazon.com/cli/) configured with your AWS credentials and default region.
+* `kubectl` installed on your local machine to interact with the EKS cluster after deployment.
+
+## Deployment
+
+This infrastructure can be deployed using only two Terraform commands:
+
+1.  **Initialize Terraform:**
+
+    ```bash
+    terraform init
+    ```
+
+2.  **Review the planned changes:**
+
+    ```bash
+    terraform plan
+    ```
+    Carefully inspect the output of this command to understand the resources that will be created, modified, or destroyed.
+
+3.  **Apply the Terraform configuration:**
+
+    ```bash
+    terraform apply -auto-approve
+    ```
+    This command will provision the AWS infrastructure as defined in the Terraform code. The `-auto-approve` flag will automatically approve the changes, but it's recommended to omit this flag for the initial run and manually approve after reviewing the plan.
+
+## Post-Deployment
+
+Once the `terraform apply` command completes successfully:
+
+1.  **Configure `kubectl`:** Terraform outputs the necessary information to configure `kubectl` to connect to your new EKS cluster. You can typically find this in the Terraform output or by using the AWS CLI:
+
+    ```bash
+    aws eks update-kubeconfig --name <your_eks_cluster_name> --region <your_aws_region>
+    ```
+    *(Replace `<your_eks_cluster_name>` with `my-eks-cluster` and `<your_aws_region>` with the region you deployed to)*
+
+2.  **Verify the Kubernetes Deployment:**
+
+    ```bash
+    kubectl get deployments -n default
+    ```
+    You should see the `my-sts-app-deployment` with 4 replicas ready.
+
+3.  **Verify the Kubernetes Service and Load Balancer:**
+
+    ```bash
+    kubectl get svc -n default
+    ```
+    You should see the `my-sts-app-service` of type `LoadBalancer`. The external IP or hostname of the Load Balancer will be listed in the output. You can use this address to access your application.
+
+## Cleanup
+
+To destroy the created infrastructure, run the following command:
+
+```bash
+terraform destroy -auto-approve
