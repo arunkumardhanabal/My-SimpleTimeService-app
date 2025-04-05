@@ -1,6 +1,6 @@
 # Task 1 - Simple Time Service
 
-This repository contains a simple Python Flask application that provides the current timestamp and the IP address of the visitor.
+The "app" directory contains a simple Python Flask application that provides the current timestamp and the IP address of the visitor.
 
 ## Overview
 
@@ -48,7 +48,7 @@ JSON
 
 # Terraform EKS Cluster with Load Balancer
 
-"Terraform-Files" directory contains Terraform code to provision the following infrastructure in AWS:
+The "terraform" directory contains Terraform code to provision the following infrastructure in AWS:
 
 * A Virtual Private Cloud (VPC) with:
     * 2 Public Subnets
