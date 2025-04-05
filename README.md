@@ -44,5 +44,3 @@ JSON
 }
 ```
 
-(The IP address might vary depending on your Docker network configuration).
-
