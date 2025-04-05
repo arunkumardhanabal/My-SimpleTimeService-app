@@ -26,14 +26,14 @@ Bash
 
 Once the container is running, you can access the service by opening your web browser or using a tool like curl to the following address:
 
-_http://localhost:5000/_
+```http://localhost:5000/```
 You should see a JSON response similar to:
 
 JSON
 
-_{
+```{
   "timestamp": "2025-04-04T23:06:00.123456",
   "ip": "172.17.0.1"
-}_
+}```
 (The IP address might vary depending on your Docker network configuration).
 
