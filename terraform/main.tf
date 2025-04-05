@@ -17,7 +17,118 @@ terraform {
 }
 
 provider "aws" {
-  region = "ap-southeast-1" # Replace with your desired AWS region
+  region = var.aws_region
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Variables
+# ---------------------------------------------------------------------------------------------------------------------
+
+variable "aws_region" {
+  type        = string
+  description = "AWS region to deploy to"
+}
+
+variable "vpc_cidr" {
+  type        = string
+  description = "CIDR block for the VPC"
+  default     = "10.0.0.0/16"
+}
+
+variable "public_subnet_1_cidr" {
+  type        = string
+  description = "CIDR block for the first public subnet"
+  default     = "10.0.1.0/24"
+}
+
+variable "public_subnet_2_cidr" {
+  type        = string
+  description = "CIDR block for the second public subnet"
+  default     = "10.0.2.0/24"
+}
+
+variable "private_subnet_1_cidr" {
+  type        = string
+  description = "CIDR block for the first private subnet"
+  default     = "10.0.3.0/24"
+}
+
+variable "private_subnet_2_cidr" {
+  type        = string
+  description = "CIDR block for the second private subnet"
+  default     = "10.0.4.0/24"
+}
+
+variable "availability_zone_1" {
+  type        = string
+  description = "Availability Zone for the first set of subnets"
+  default     = "ap-southeast-1a"
+}
+
+variable "availability_zone_2" {
+  type        = string
+  description = "Availability Zone for the second set of subnets"
+  default     = "ap-southeast-1b"
+}
+
+variable "eks_cluster_name" {
+  type        = string
+  description = "Name of the EKS cluster"
+  default     = "eks-cluster"
+}
+
+variable "eks_node_group_name" {
+  type        = string
+  description = "Name of the EKS node group"
+  default     = "eks-node-group"
+}
+
+variable "eks_node_instance_type" {
+  type        = string
+  description = "Instance type for the EKS nodes"
+  default     = "t2.medium"
+}
+
+variable "eks_node_desired_size" {
+  type        = number
+  description = "Desired number of EKS nodes"
+  default     = 2
+}
+
+variable "eks_node_max_size" {
+  type        = number
+  description = "Maximum number of EKS nodes"
+  default     = 3
+}
+
+variable "eks_node_min_size" {
+  type        = number
+  description = "Minimum number of EKS nodes"
+  default     = 1
+}
+
+variable "container_image" {
+  type        = string
+  description = "Docker image to deploy"
+  default     = "arun1771/my-sts-app:v2"
+}
+
+variable "container_port" {
+  type        = number
+  description = "Port the container application listens on"
+  default     = 5000
+}
+
+variable "service_port" {
+  type        = number
+  description = "Port to expose the service on the Load Balancer"
+  default     = 80
+}
+
+variable "deployment_replicas" {
+  type        = number
+  description = "Number of deployment replicas"
+  default     = 4
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -25,9 +136,9 @@ provider "aws" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
-  enable_dns_support = true
+  enable_dns_support   = true
 
   tags = {
     Name = "eks-vpc"
@@ -36,9 +147,9 @@ resource "aws_vpc" "main" {
 
 # Public Subnets
 resource "aws_subnet" "public_subnet_1" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.1.0/24"
-  availability_zone = "ap-southeast-1a" # Replace with your desired AZ
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.public_subnet_1_cidr
+  availability_zone = var.availability_zone_1
   map_public_ip_on_launch = true
 
   tags = {
@@ -47,9 +158,9 @@ resource "aws_subnet" "public_subnet_1" {
 }
 
 resource "aws_subnet" "public_subnet_2" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.2.0/24"
-  availability_zone = "ap-southeast-1b" # Replace with your desired AZ
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.public_subnet_2_cidr
+  availability_zone = var.availability_zone_2
   map_public_ip_on_launch = true
 
   tags = {
@@ -59,9 +170,9 @@ resource "aws_subnet" "public_subnet_2" {
 
 # Private Subnets
 resource "aws_subnet" "private_subnet_1" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.3.0/24"
-  availability_zone = "ap-southeast-1a" # Replace with your desired AZ
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.private_subnet_1_cidr
+  availability_zone = var.availability_zone_1
 
   tags = {
     Name = "private-subnet-1"
@@ -69,9 +180,9 @@ resource "aws_subnet" "private_subnet_1" {
 }
 
 resource "aws_subnet" "private_subnet_2" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.4.0/24"
-  availability_zone = "ap-southeast-1b" # Replace with your desired AZ
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.private_subnet_2_cidr
+  availability_zone = var.availability_zone_2
 
   tags = {
     Name = "private-subnet-2"
@@ -133,7 +244,7 @@ resource "aws_route_table" "private_route_table" {
   vpc_id = aws_vpc.main.id
 
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block    = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.nat_gateway.id
   }
 
@@ -159,7 +270,7 @@ resource "aws_route_table_association" "private_subnet_2_assoc" {
 
 # EKS Cluster Role
 resource "aws_iam_role" "eks_cluster_role" {
-  name = "eks-cluster-role"
+  name = "${var.eks_cluster_name}-role"
   assume_role_policy = jsonencode({
     Statement = [{
       Action = "sts:AssumeRole"
@@ -174,14 +285,14 @@ resource "aws_iam_role" "eks_cluster_role" {
 
 # EKS Cluster Policy Attachment
 resource "aws_iam_policy_attachment" "eks_cluster_policy_attachment" {
-  name       = "eks-cluster-policy-attachment"
+  name       = "${var.eks_cluster_name}-cluster-policy-attachment"
   roles      = [aws_iam_role.eks_cluster_role.name]
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 }
 
 # EKS Node Group Role
 resource "aws_iam_role" "eks_node_group_role" {
-  name = "eks-node-group-role"
+  name = "${var.eks_node_group_name}-role"
   assume_role_policy = jsonencode({
     Statement = [{
       Action = "sts:AssumeRole"
@@ -196,26 +307,26 @@ resource "aws_iam_role" "eks_node_group_role" {
 
 # EKS Node Group Policy Attachments
 resource "aws_iam_policy_attachment" "eks_node_group_policy_attachment_1" {
-  name       = "eks-node-group-policy-attachment-1"
+  name       = "${var.eks_node_group_name}-worker-policy-attachment"
   roles      = [aws_iam_role.eks_node_group_role.name]
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
 }
 
 resource "aws_iam_policy_attachment" "eks_node_group_policy_attachment_2" {
-  name       = "eks-node-group-policy-attachment-2"
+  name       = "${var.eks_node_group_name}-cni-policy-attachment"
   roles      = [aws_iam_role.eks_node_group_role.name]
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
 }
 
 resource "aws_iam_policy_attachment" "eks_node_group_policy_attachment_3" {
-  name       = "eks-node-group-policy-attachment-3"
+  name       = "${var.eks_node_group_name}-ecr-read-only-policy-attachment"
   roles      = [aws_iam_role.eks_node_group_role.name]
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
 # EKS Cluster
 resource "aws_eks_cluster" "eks_cluster" {
-  name     = "eks-cluster"
+  name     = var.eks_cluster_name
   role_arn = aws_iam_role.eks_cluster_role.arn
   vpc_config {
     subnet_ids = [
@@ -237,7 +348,7 @@ resource "aws_eks_cluster" "eks_cluster" {
 
 # Security Group for EKS Cluster
 resource "aws_security_group" "eks_cluster_sg" {
-  name        = "eks-cluster-sg"
+  name        = "${var.eks_cluster_name}-sg"
   description = "Security group for EKS cluster"
   vpc_id      = aws_vpc.main.id
 
@@ -245,7 +356,7 @@ resource "aws_security_group" "eks_cluster_sg" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1" # All protocols
-    cidr_blocks = ["10.0.0.0/16"] # Allow communication within the VPC
+    cidr_blocks = [var.vpc_cidr] # Allow communication within the VPC
   }
 
   egress {
@@ -256,7 +367,7 @@ resource "aws_security_group" "eks_cluster_sg" {
   }
 
   tags = {
-    Name = "eks-cluster-sg"
+    Name = "${var.eks_cluster_name}-sg"
   }
 }
 
@@ -264,15 +375,15 @@ resource "aws_security_group" "eks_cluster_sg" {
 # EKS Node Group - Deployed to Private Subnets
 resource "aws_eks_node_group" "eks_node_group" {
   cluster_name    = aws_eks_cluster.eks_cluster.name
-  node_group_name = "eks-node-group"
+  node_group_name = var.eks_node_group_name
   node_role_arn   = aws_iam_role.eks_node_group_role.arn
-  subnet_ids      = [aws_subnet.private_subnet_1.id, aws_subnet.private_subnet_2.id]  # Private Subnets ONLY
-  instance_types = ["t2.medium"] # Choose appropriate instance type
+  subnet_ids      = [aws_subnet.private_subnet_1.id, aws_subnet.private_subnet_2.id]  # IMPORTANT: Private Subnets ONLY
+  instance_types  = [var.eks_node_instance_type]
 
   scaling_config {
-    desired_size = 2
-    max_size     = 3
-    min_size     = 1
+    desired_size = var.eks_node_desired_size
+    max_size     = var.eks_node_max_size
+    min_size     = var.eks_node_min_size
   }
 
   update_config {
@@ -316,7 +427,7 @@ resource "kubernetes_deployment" "app_deployment" {
     }
   }
   spec {
-    replicas = 4
+    replicas = var.deployment_replicas
     selector {
       match_labels = {
         app = "my-sts-app"
@@ -330,10 +441,10 @@ resource "kubernetes_deployment" "app_deployment" {
       }
       spec {
         container {
-          image = "arun1771/my-sts-app:v2" # Replace your image name if needed
+          image = var.container_image
           name  = "my-sts-app-container"
           port {
-            container_port = 5000 # Assuming your application listens on port 80
+            container_port = var.container_port
           }
         }
       }
@@ -355,8 +466,8 @@ resource "kubernetes_service" "app_service" {
       app = "my-sts-app"
     }
     port {
-      port        = 80
-      target_port = 5000 # Assuming your application listens on port 5000
+      port        = var.service_port
+      target_port = var.container_port
       protocol    = "TCP"
     }
     type = "LoadBalancer"
