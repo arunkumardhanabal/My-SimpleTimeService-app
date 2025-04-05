@@ -22,7 +22,7 @@ You can directly run the pre-built Docker image from Docker Hub or start with bu
 
 Bash
 
-'''docker run -p 5000:5000 arun1771/my-sts-app:v2'''
+```docker run -p 5000:5000 arun1771/my-sts-app:v2```
 
 Once the container is running, you can access the service by opening your web browser or using a tool like curl to the following address:
 
