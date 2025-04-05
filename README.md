@@ -18,7 +18,8 @@ This application has been containerized and is available on Docker Hub. You can 
 **Prerequisites**
 
 **Docker:** Ensure you have Docker installed on your system. You can find installation instructions for your operating system on the official Docker website.
-Running the Pre-built Docker Image (Recommended)
+Running the Pre-built Docker Image (Recommended).
+
 You can directly run the pre-built Docker image from Docker Hub or start with building the image from the code available in this repository.
 
 Bash
